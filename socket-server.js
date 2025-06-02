@@ -2,8 +2,8 @@
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
-import { connectToDatabase } from "./lib/mongodb.js";
 import { ObjectId } from "mongodb";
+import { connectToDatabase } from "./lib/mongodb.js";
 
 const app = express();
 const server = http.createServer(app);
