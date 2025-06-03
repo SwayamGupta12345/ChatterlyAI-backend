@@ -37,8 +37,12 @@ io.on("connection", (socket) => {
       {$push: { messages: message },
       $set: { lastModified: new Date() }
       });
-
-    io.to(chatboxId).emit("receive-message", message); // 🔄 broadcast to all in room
+    io.to(chatboxId).emit("receive-message", {
+      chatboxId,
+      senderEmail,
+      text,
+      timestamp: new Date().toISOString(),
+      }); // 🔄 broadcast to all in room
   });
 
   socket.on("disconnect", () => {
