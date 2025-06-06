@@ -101,6 +101,7 @@ io.on("connection", (socket) => {
 
   socket.on("send-ai-message", async ({ roomId, senderName, text, role }) => {
     try {
+      const { db } = await connectToDatabase()
       // Save user message
       const userMsgRes = await db.collection("messages").insertOne({
         senderName,
