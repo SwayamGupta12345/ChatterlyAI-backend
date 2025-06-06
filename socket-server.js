@@ -14,12 +14,12 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  socket.on("join-room", (chatboxId) => {
-    socket.join(chatboxId);
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
   });
 
   socket.on("send-message", async (data) => {
-    const { senderEmail, chatboxId, text } = data;
+    const { senderEmail, roomId, text } = data;
 
     try {
       const { db } = await connectToDatabase();
@@ -37,7 +37,7 @@ io.on("connection", (socket) => {
 
       // 2. Store only the message _id in the chatboxes.messages array
       await db.collection("chatboxes").updateOne(
-        { _id: new ObjectId(chatboxId) },
+        { _id: new ObjectId(roomId) },
         {
           $push: { messages: message._id },
           $set: { lastModified: new Date() },
@@ -45,8 +45,8 @@ io.on("connection", (socket) => {
       );
 
       // 3. Emit the message (without _id, optionally include if needed)
-      io.to(chatboxId).emit("receive-message", {
-        chatboxId,
+      io.to(roomId).emit("receive-message", {
+        roomId,
         senderEmail,
         text,
         timestamp: message.timestamp.toISOString(),
@@ -59,7 +59,7 @@ io.on("connection", (socket) => {
     }
   });
 
-   socket.on("edit-message", async ({ messageId, newText, chatboxId }) => {
+   socket.on("edit-message", async ({ messageId, newText, roomId }) => {
     try {
       const { db } = await connectToDatabase();
 
@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
         { $set: { text: newText } }
       );
 
-      io.to(chatboxId).emit("message-edited", {
+      io.to(roomId).emit("message-edited", {
         messageId,
         newText,
       });
@@ -79,18 +79,18 @@ io.on("connection", (socket) => {
   });
 
   // ✅ Delete Message
-  socket.on("delete-message", async ({ messageId, chatboxId }) => {
+  socket.on("delete-message", async ({ messageId, roomId }) => {
     try {
       const { db } = await connectToDatabase();
 
       await db.collection("frnd_msg").deleteOne({ _id: new ObjectId(messageId) });
 
       await db.collection("chatboxes").updateOne(
-        { _id: new ObjectId(chatboxId) },
+        { _id: new ObjectId(roomId) },
         { $pull: { messages: new ObjectId(messageId) } }
       );
 
-      io.to(chatboxId).emit("message-deleted", {
+      io.to(roomId).emit("message-deleted", {
         messageId,
       });
     } catch (error) {
@@ -99,7 +99,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("send-ai-message", async ({ chatboxId, senderName, text, role }) => {
+  socket.on("send-ai-message", async ({ roomId, senderName, text, role }) => {
     try {
       // Save user message
       const userMsgRes = await db.collection("messages").insertOne({
@@ -126,14 +126,14 @@ io.on("connection", (socket) => {
       });
 
       // Emit AI response back to sender
-      io.to(chatboxId).emit("receive-bot-message", {
+      io.to(roomId).emit("receive-bot-message", {
         role: "bot",
         text: aiText,
       });
 
       // Optionally: Save message pair if needed
       await db.collection("conversations").updateOne(
-        { _id: new ObjectId(chatboxId) },
+        { _id: new ObjectId(roomId) },
         {
           $push: {
             messages: {
