@@ -100,6 +100,10 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("edit-user-message", ({ messageId, newText, senderEmail }) => {
+    io.emit("receive-edited-message", { messageId, newText, senderEmail });
+  });
+
   socket.on("send-ai-message", async ({ roomId, senderName, text, role }) => {
     try {
       const { db } = await connectToDatabase()
