@@ -172,7 +172,15 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3002;
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.head('/health', (req, res) => {
+  res.status(200).end();
+});
 
 server.listen(PORT, () => {
   console.log(`🚀 WebSocket Server listening on port ${PORT}`);
 });
+
