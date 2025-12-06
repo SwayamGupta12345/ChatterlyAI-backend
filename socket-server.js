@@ -32,6 +32,10 @@ io.on("connection", (socket) => {
   });
 });
 
+  socket.on("request-online-users", () => {
+    io.emit("online-users-list", Array.from(onlineUsers));
+  });
+
   socket.on("send-message", async (data) => {
     const { senderEmail, roomId, text } = data;
 
