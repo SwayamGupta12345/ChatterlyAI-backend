@@ -21,15 +21,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("online-room", (email) => {
-  socket.email = email;
-  onlineUsers.add(email);
+    socket.email = email;
+    onlineUsers.add(email);
 
-  // Notify all users somebody is online
-  io.emit("user-online-status", {
-    email,
-    isOnline: true,
+    socket.join(email);
+    // Notify all users somebody is online
+    io.emit("user-online-status", {
+      email,
+      isOnline: true,
+    });
   });
-});
 
   socket.on("request-online-users", () => {
     socket.emit("online-users-list", Array.from(onlineUsers));
@@ -196,17 +197,17 @@ io.on("connection", (socket) => {
       socket.emit("error-message", "Something went wrong on the server.");
     }
   });
-  
-  socket.on("disconnect", () => {
-  if (socket.email) {
-    onlineUsers.delete(socket.email);
 
-    io.emit("user-online-status", {
-      email: socket.email,
-      isOnline: false,
-    });
-  }
-});
+  socket.on("disconnect", () => {
+    if (socket.email) {
+      onlineUsers.delete(socket.email);
+
+      io.emit("user-online-status", {
+        email: socket.email,
+        isOnline: false,
+      });
+    }
+  });
 
 });
 
